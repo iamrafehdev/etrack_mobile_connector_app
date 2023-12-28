@@ -1,3 +1,5 @@
+import 'package:etrack_mobile_connector_app/modules/splash/controllers/splash_controller.dart';
+import 'package:etrack_mobile_connector_app/modules/splash/views/splash_screen.dart';
 import 'package:etrack_mobile_connector_app/modules/work_order/controllers/work_order_controller.dart';
 import 'package:etrack_mobile_connector_app/modules/work_order/views/work_order_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,11 +19,14 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => WorkOrderController(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => SplashController(),
+        ),
       ],
       child: const MaterialApp(
         title: 'ETrack Mobile Connector',
         debugShowCheckedModeBanner: false,
-        home: WorkOrderScreen(),
+        home: SplashScreen(),
       ),
     );
   }

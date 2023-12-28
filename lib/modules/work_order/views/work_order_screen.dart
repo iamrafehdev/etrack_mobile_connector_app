@@ -34,7 +34,7 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
       ),
       body: workOrderController.loading
           ? ListView.builder(
-              itemCount: 10,
+              itemCount: 3,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4.0),
