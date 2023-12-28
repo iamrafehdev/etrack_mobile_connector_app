@@ -7,6 +7,8 @@ import 'package:etrack_mobile_connector_app/config/logger/app_logger.dart';
 import 'package:etrack_mobile_connector_app/models/work_order_model.dart';
 import 'package:fialogs/fialogs.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WorkOrderController extends ChangeNotifier {
   AppLogger logger = AppLogger();
@@ -21,7 +23,7 @@ class WorkOrderController extends ChangeNotifier {
   connectivity(context) {
     internet(
       connected: () {
-        // login(context);
+        //
       },
       notConnected: () {
         // notConnectedDialog(context);
@@ -49,11 +51,11 @@ class WorkOrderController extends ChangeNotifier {
 
       if (responseStatusCode == StatusCode.OK) {
         var childes = responseData['data']['work_orders'];
-        List<WorkOrderModel> _tempList = [];
+        List<WorkOrderModel> tempList = [];
         childes.forEach((item) {
-          _tempList.add(WorkOrderModel.fromJson(item));
+          tempList.add(WorkOrderModel.fromJson(item));
         });
-        workOrderModelList = _tempList;
+        workOrderModelList = tempList;
         updateState();
       } else {
         if (responseData != null) {
@@ -64,11 +66,27 @@ class WorkOrderController extends ChangeNotifier {
       }
     } catch (e, s) {
       if (loading) {
-        // Navigator.pop(context);
         loading = false;
       }
       logger.e('Error', e, s);
       errorDialog(context, "Error", "Something went wrong please try again", closeOnBackPress: true, neutralButtonText: "OK");
     }
+  }
+
+  Future<void> openMap(context, double latitude, double longitude) async {
+    final Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+
+    if (!await launchUrl(url)) {
+      errorDialog(context, "Invalid", "Could not launch $url");
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  dateTimeConverter(String date) {
+    var inputFormat = DateFormat('dd/MM/yyyy HH:mm');
+    var inputDate = inputFormat.parse(date);
+    var outputFormat = DateFormat('EEEE, dd/MM/yyyy hh:mm a');
+    var outputScheduledDate = outputFormat.format(inputDate);
+    return outputScheduledDate;
   }
 }

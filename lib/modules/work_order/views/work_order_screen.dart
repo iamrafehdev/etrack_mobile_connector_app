@@ -1,10 +1,10 @@
 import 'package:etrack_mobile_connector_app/config/dio/app_dio.dart';
 import 'package:etrack_mobile_connector_app/models/work_order_model.dart';
 import 'package:etrack_mobile_connector_app/modules/work_order/controllers/work_order_controller.dart';
+import 'package:etrack_mobile_connector_app/modules/work_order/views/work_order_details_screen.dart';
 import 'package:etrack_mobile_connector_app/widgets/app_loading.dart';
 import 'package:etrack_mobile_connector_app/widgets/app_text.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class WorkOrderScreen extends StatefulWidget {
@@ -15,6 +15,8 @@ class WorkOrderScreen extends StatefulWidget {
 }
 
 class _WorkOrderScreenState extends State<WorkOrderScreen> {
+  GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +34,7 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
       ),
       body: workOrderController.loading
           ? ListView.builder(
-              itemCount: 5,
+              itemCount: 10,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4.0),
@@ -94,108 +96,114 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
               ? const Center(child: AppText("Work Orders not found!"))
               : Consumer<WorkOrderController>(
                   builder: (context, workOrderConsumer, child) {
-                    return ListView.builder(
-                      itemCount: workOrderConsumer.workOrderModelList.length,
-                      itemBuilder: (context, index) {
-                        WorkOrderModel item = workOrderConsumer.workOrderModelList[index];
-                        var inputFormat = DateFormat('dd/MM/yyyy HH:mm');
-                        var inputDate = inputFormat.parse('${item.scheduledDate}');
-                        var outputFormat = DateFormat('EEEE, dd/MM/yyyy hh:mm a');
-                        var outputScheduledDate = outputFormat.format(inputDate);
+                    return RefreshIndicator(
+                      key: refreshIndicatorKey,
+                      color: Colors.blue,
+                      onRefresh: () async {
+                        await workOrderController.getWorkOrders(context);
+                      },
+                      child: ListView.builder(
+                        itemCount: workOrderConsumer.workOrderModelList.length,
+                        itemBuilder: (context, index) {
+                          WorkOrderModel item = workOrderConsumer.workOrderModelList[index];
 
-                        return InkWell(
-                          onTap: () {},
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: item.state == "Arrived"
-                                        ? Colors.green.withOpacity(0.8)
-                                        : item.state == "Assigned"
-                                            ? Colors.blue.withOpacity(0.8)
-                                            : Colors.amber.withOpacity(0.8),
-                                    child: const Icon(
-                                      Icons.work_history_rounded,
-                                      color: Colors.white,
-                                      size: 22.0,
+                          return InkWell(
+                            onTap: () {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (context) => WorkOrderDetailsScreen(workOrderModel: item)));
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 4.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: item.state == "Arrived"
+                                          ? Colors.green.withOpacity(0.8)
+                                          : item.state == "Assigned"
+                                              ? Colors.blue.withOpacity(0.8)
+                                              : Colors.amber.withOpacity(0.8),
+                                      child: const Icon(
+                                        Icons.work_history_rounded,
+                                        color: Colors.white,
+                                        size: 22.0,
+                                      ),
                                     ),
-                                  ),
-                                  title: AppText("Project ID: ${item.projectId}", size: 14.0),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          AppText(
-                                            "Work order: ${item.workOrder}",
-                                            size: 12,
-                                            color: Colors.grey,
-                                          ),
-                                          const SizedBox(width: 8.0),
-                                          Row(
-                                            children: [
-                                              const AppText(
-                                                "State:",
-                                                size: 12,
-                                                color: Colors.grey,
-                                              ),
-                                              const SizedBox(width: 2.0),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                    border: Border.all(
+                                    title: AppText("Project ID: ${item.projectId}", size: 14.0),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            AppText(
+                                              "Work order: ${item.workOrder}",
+                                              size: 12,
+                                              color: Colors.grey,
+                                            ),
+                                            const SizedBox(width: 8.0),
+                                            Row(
+                                              children: [
+                                                const AppText(
+                                                  "State:",
+                                                  size: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                                const SizedBox(width: 2.0),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                        color: item.state == "Arrived"
+                                                            ? Colors.green
+                                                            : item.state == "Assigned"
+                                                                ? Colors.blue
+                                                                : Colors.amber,
+                                                      ),
+                                                      borderRadius: const BorderRadius.all(Radius.circular(10.0))),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(bottom: 1.0, left: 6.0, right: 6.0),
+                                                    child: AppText(
+                                                      "${item.state}",
+                                                      size: 10,
                                                       color: item.state == "Arrived"
                                                           ? Colors.green
                                                           : item.state == "Assigned"
                                                               ? Colors.blue
                                                               : Colors.amber,
                                                     ),
-                                                    borderRadius: const BorderRadius.all(Radius.circular(10.0))),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.only(bottom: 1.0, left: 6.0, right: 6.0),
-                                                  child: AppText(
-                                                    "${item.state}",
-                                                    size: 10,
-                                                    color: item.state == "Arrived"
-                                                        ? Colors.green
-                                                        : item.state == "Assigned"
-                                                            ? Colors.blue
-                                                            : Colors.amber,
                                                   ),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 8.0),
-                                      AppText(
-                                        "Area: ${item.area}",
-                                        size: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ],
+                                                )
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                        AppText(
+                                          "Area: ${item.area}",
+                                          size: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 12, right: 12),
-                                  child: AppText(
-                                    "Scheduled Date: $outputScheduledDate",
-                                    color: Colors.grey,
-                                    size: 12,
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 12, right: 12),
+                                    child: AppText(
+                                      "Scheduled Date: ${workOrderConsumer.dateTimeConverter(item.scheduledDate!)}",
+                                      color: Colors.grey,
+                                      size: 12,
+                                    ),
                                   ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 14.0, right: 14.0),
-                                  child: Divider(),
-                                ),
-                              ],
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 14.0, right: 14.0),
+                                    child: Divider(),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
