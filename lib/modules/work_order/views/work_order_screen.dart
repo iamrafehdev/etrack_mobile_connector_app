@@ -142,7 +142,7 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
                       },
                     )
                   : workOrderController.filteredWorkOrderModelList.isEmpty
-                      ? const Center(child: AppText("Record not found!"))
+                      ? const Center(child: AppText("No Record found!"))
                       : Consumer<WorkOrderController>(
                           builder: (context, workOrderConsumer, child) {
                             return RefreshIndicator(

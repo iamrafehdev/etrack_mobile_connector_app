@@ -33,10 +33,20 @@ class WorkOrderController extends ChangeNotifier {
       },
       notConnected: () async {
         final SharedPreferences prefs = await SharedPreferences.getInstance();
-        final String? workOrdersString = prefs.getString('work_order_key');
+        if (prefs.getBool('firsTimeOpen') == null) {
+          warningDialog(context, "Request", "For first time user needs to connect internet to get records!", neutralButtonText: "OK", neutralButtonAction: (){
+            connectivity(context);
+          });
+        } else {
+          prefs.setBool("firsTimeOpen", false);
+          final String? workOrdersString = prefs.getString('work_order_key');
+          logger.wtf(workOrdersString);
 
-        final List<WorkOrderModel> workOrdersOffline = WorkOrderModel.decode(workOrdersString!);
-        filteredWorkOrderModelList = workOrdersOffline;
+          if (workOrdersString != null) {
+            final List<WorkOrderModel> workOrdersOffline = WorkOrderModel.decode(workOrdersString);
+            filteredWorkOrderModelList = workOrdersOffline;
+          }
+        }
         loading = false;
 
         updateState();
@@ -74,6 +84,7 @@ class WorkOrderController extends ChangeNotifier {
         final SharedPreferences prefs = await SharedPreferences.getInstance();
         final String encodedData = WorkOrderModel.encode(filteredWorkOrderModelList);
         await prefs.setString('work_order_key', encodedData);
+        prefs.setBool("firsTimeOpen", false);
         updateState();
       } else {
         if (responseData != null) {
