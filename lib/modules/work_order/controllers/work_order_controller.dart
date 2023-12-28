@@ -15,6 +15,8 @@ class WorkOrderController extends ChangeNotifier {
   bool loading = false;
   late AppDio dio;
   List<WorkOrderModel> workOrderModelList = [];
+  List<WorkOrderModel> filteredWorkOrderModelList = [];
+  TextEditingController searchController = TextEditingController();
 
   updateState() {
     notifyListeners();
@@ -56,6 +58,7 @@ class WorkOrderController extends ChangeNotifier {
           tempList.add(WorkOrderModel.fromJson(item));
         });
         workOrderModelList = tempList;
+        filteredWorkOrderModelList = tempList;
         updateState();
       } else {
         if (responseData != null) {

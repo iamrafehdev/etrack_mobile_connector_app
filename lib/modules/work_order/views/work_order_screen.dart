@@ -4,6 +4,7 @@ import 'package:etrack_mobile_connector_app/modules/work_order/controllers/work_
 import 'package:etrack_mobile_connector_app/modules/work_order/views/work_order_details_screen.dart';
 import 'package:etrack_mobile_connector_app/widgets/app_loading.dart';
 import 'package:etrack_mobile_connector_app/widgets/app_text.dart';
+import 'package:etrack_mobile_connector_app/widgets/icon_field.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,186 +28,217 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
   Widget build(BuildContext context) {
     final workOrderController = Provider.of<WorkOrderController>(context);
     Size screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Center(child: AppText("Work Orders", color: Colors.white, isBold: true)),
-      ),
-      body: workOrderController.loading
-          ? ListView.builder(
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListTile(
-                        leading: const AppLoading(
-                          width: 40.0,
-                          height: 40.0,
-                          radius: 50.0,
-                        ),
-                        title: const AppLoading(
-                          width: 10.0,
-                          height: 10.0,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4.0),
-                            Row(
-                              children: [
-                                AppLoading(
-                                  width: screenSize.width * 0.3,
-                                  height: 8.0,
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.blue,
+          title: const Center(child: AppText("Work Orders", color: Colors.white, isBold: true)),
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: AppIconField(
+                controller: workOrderController.searchController,
+                label: "Search",
+                hint: "wo12345",
+                suffixIcon: Icons.search,
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList
+                        .where((element) => element.workOrder!.toLowerCase().contains(value.toLowerCase()))
+                        .toList();
+                    workOrderController.updateState();
+                  } else {
+                    workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList;
+                    workOrderController.updateState();
+                  }
+                },
+              ),
+            ),
+            Expanded(
+              child: workOrderController.loading
+                  ? ListView.builder(
+                      itemCount: 3,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                leading: const AppLoading(
+                                  width: 40.0,
+                                  height: 40.0,
+                                  radius: 50.0,
                                 ),
-                                const SizedBox(width: 8.0),
-                                AppLoading(
-                                  width: screenSize.width * 0.3,
-                                  height: 8.0,
+                                title: const AppLoading(
+                                  width: 10.0,
+                                  height: 10.0,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 4.0),
-                            AppLoading(
-                              width: screenSize.width * 0.3,
-                              height: 8.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12, right: 12),
-                        child: AppLoading(
-                          width: screenSize.width * 0.8,
-                          height: 8.0,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 14.0, right: 14.0),
-                        child: Divider(),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            )
-          : workOrderController.workOrderModelList.isEmpty
-              ? const Center(child: AppText("Work Orders not found!"))
-              : Consumer<WorkOrderController>(
-                  builder: (context, workOrderConsumer, child) {
-                    return RefreshIndicator(
-                      key: refreshIndicatorKey,
-                      color: Colors.blue,
-                      onRefresh: () async {
-                        await workOrderController.getWorkOrders(context);
-                      },
-                      child: ListView.builder(
-                        itemCount: workOrderConsumer.workOrderModelList.length,
-                        itemBuilder: (context, index) {
-                          WorkOrderModel item = workOrderConsumer.workOrderModelList[index];
-
-                          return InkWell(
-                            onTap: () {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute(builder: (context) => WorkOrderDetailsScreen(workOrderModel: item)));
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: item.state == "Arrived"
-                                          ? Colors.green.withOpacity(0.8)
-                                          : item.state == "Assigned"
-                                              ? Colors.blue.withOpacity(0.8)
-                                              : Colors.amber.withOpacity(0.8),
-                                      child: const Icon(
-                                        Icons.work_history_rounded,
-                                        color: Colors.white,
-                                        size: 22.0,
-                                      ),
-                                    ),
-                                    title: AppText("Project ID: ${item.projectId}", size: 14.0),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4.0),
+                                    Row(
                                       children: [
-                                        Row(
-                                          children: [
-                                            AppText(
-                                              "Work order: ${item.workOrder}",
-                                              size: 12,
-                                              color: Colors.grey,
-                                            ),
-                                            const SizedBox(width: 8.0),
-                                            Row(
-                                              children: [
-                                                const AppText(
-                                                  "State:",
-                                                  size: 12,
-                                                  color: Colors.grey,
-                                                ),
-                                                const SizedBox(width: 2.0),
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                      border: Border.all(
-                                                        color: item.state == "Arrived"
-                                                            ? Colors.green
-                                                            : item.state == "Assigned"
-                                                                ? Colors.blue
-                                                                : Colors.amber,
-                                                      ),
-                                                      borderRadius: const BorderRadius.all(Radius.circular(10.0))),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(bottom: 1.0, left: 6.0, right: 6.0),
-                                                    child: AppText(
-                                                      "${item.state}",
-                                                      size: 10,
-                                                      color: item.state == "Arrived"
-                                                          ? Colors.green
-                                                          : item.state == "Assigned"
-                                                              ? Colors.blue
-                                                              : Colors.amber,
-                                                    ),
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ],
+                                        AppLoading(
+                                          width: screenSize.width * 0.3,
+                                          height: 8.0,
                                         ),
                                         const SizedBox(width: 8.0),
-                                        AppText(
-                                          "Area: ${item.area}",
-                                          size: 12,
-                                          color: Colors.grey,
+                                        AppLoading(
+                                          width: screenSize.width * 0.3,
+                                          height: 8.0,
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 12, right: 12),
-                                    child: AppText(
-                                      "Scheduled Date: ${workOrderConsumer.dateTimeConverter(item.scheduledDate!)}",
-                                      color: Colors.grey,
-                                      size: 12,
+                                    const SizedBox(height: 4.0),
+                                    AppLoading(
+                                      width: screenSize.width * 0.3,
+                                      height: 8.0,
                                     ),
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 14.0, right: 14.0),
-                                    child: Divider(),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 12, right: 12),
+                                child: AppLoading(
+                                  width: screenSize.width * 0.8,
+                                  height: 8.0,
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: 14.0, right: 14.0),
+                                child: Divider(),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    )
+                  : workOrderController.filteredWorkOrderModelList.isEmpty
+                      ? const Center(child: AppText("Record not found!"))
+                      : Consumer<WorkOrderController>(
+                          builder: (context, workOrderConsumer, child) {
+                            return RefreshIndicator(
+                              key: refreshIndicatorKey,
+                              color: Colors.blue,
+                              onRefresh: () async {
+                                await workOrderController.getWorkOrders(context);
+                              },
+                              child: ListView.builder(
+                                itemCount: workOrderConsumer.filteredWorkOrderModelList.length,
+                                itemBuilder: (context, index) {
+                                  WorkOrderModel item = workOrderConsumer.filteredWorkOrderModelList[index];
+
+                                  return InkWell(
+                                    onTap: () {
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(builder: (context) => WorkOrderDetailsScreen(workOrderModel: item)));
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 4.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          ListTile(
+                                            leading: CircleAvatar(
+                                              backgroundColor: item.state == "Arrived"
+                                                  ? Colors.green.withOpacity(0.8)
+                                                  : item.state == "Assigned"
+                                                      ? Colors.blue.withOpacity(0.8)
+                                                      : Colors.amber.withOpacity(0.8),
+                                              child: const Icon(
+                                                Icons.work_history_rounded,
+                                                color: Colors.white,
+                                                size: 22.0,
+                                              ),
+                                            ),
+                                            title: AppText("Project ID: ${item.projectId}", size: 14.0),
+                                            subtitle: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    AppText(
+                                                      "Work order: ${item.workOrder}",
+                                                      size: 12,
+                                                      color: Colors.grey,
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                    Row(
+                                                      children: [
+                                                        const AppText(
+                                                          "State:",
+                                                          size: 12,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        const SizedBox(width: 2.0),
+                                                        Container(
+                                                          decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                color: item.state == "Arrived"
+                                                                    ? Colors.green
+                                                                    : item.state == "Assigned"
+                                                                        ? Colors.blue
+                                                                        : Colors.amber,
+                                                              ),
+                                                              borderRadius: const BorderRadius.all(Radius.circular(10.0))),
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(bottom: 1.0, left: 6.0, right: 6.0),
+                                                            child: AppText(
+                                                              "${item.state}",
+                                                              size: 10,
+                                                              color: item.state == "Arrived"
+                                                                  ? Colors.green
+                                                                  : item.state == "Assigned"
+                                                                      ? Colors.blue
+                                                                      : Colors.amber,
+                                                            ),
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(width: 8.0),
+                                                AppText(
+                                                  "Area: ${item.area}",
+                                                  size: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 12, right: 12),
+                                            child: AppText(
+                                              "Scheduled Date: ${workOrderConsumer.dateTimeConverter(item.scheduledDate!)}",
+                                              color: Colors.grey,
+                                              size: 12,
+                                            ),
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 14.0, right: 14.0),
+                                            child: Divider(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

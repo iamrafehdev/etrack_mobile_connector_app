@@ -23,9 +23,11 @@ class MyApp extends StatelessWidget {
           create: (_) => SplashController(),
         ),
       ],
-      child: const MaterialApp(
+      child:  MaterialApp(
         title: 'ETrack Mobile Connector',
         debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+        ),
         home: SplashScreen(),
       ),
     );
