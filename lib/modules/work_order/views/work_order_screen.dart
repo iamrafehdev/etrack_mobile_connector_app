@@ -35,30 +35,51 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.blue,
-          title: const Center(child: AppText("Work Orders", color: Colors.white, isBold: true)),
+          title: const AppText("Work Orders", color: Colors.white, isBold: true),
+          actions: [
+            workOrderController.isSearchEnabled == false
+                ? IconButton(
+                    onPressed: () {
+                      workOrderController.isSearchEnabled = true;
+                      workOrderController.updateState();
+                    },
+                    icon: const Icon(Icons.search, color: Colors.white),
+                  )
+                : IconButton(
+                    onPressed: () {
+                      workOrderController.isSearchEnabled = false;
+                      workOrderController.searchController.clear();
+                      workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList;
+                      workOrderController.updateState();
+                    },
+                    icon: const Icon(Icons.search_off, color: Colors.white),
+                  ),
+          ],
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: AppIconField(
-                controller: workOrderController.searchController,
-                label: "Search",
-                hint: "wo12345",
-                suffixIcon: Icons.search,
-                onChanged: (value) {
-                  if (value.isNotEmpty) {
-                    workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList
-                        .where((element) => element.workOrder!.toLowerCase().contains(value.toLowerCase()))
-                        .toList();
-                    workOrderController.updateState();
-                  } else {
-                    workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList;
-                    workOrderController.updateState();
-                  }
-                },
+            if (workOrderController.isSearchEnabled) ...[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: AppIconField(
+                  controller: workOrderController.searchController,
+                  label: "Search",
+                  hint: "wo12345",
+                  suffixIcon: Icons.search,
+                  onChanged: (value) {
+                    if (value.isNotEmpty) {
+                      workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList
+                          .where((element) => element.workOrder!.toLowerCase().contains(value.toLowerCase()))
+                          .toList();
+                      workOrderController.updateState();
+                    } else {
+                      workOrderController.filteredWorkOrderModelList = workOrderController.workOrderModelList;
+                      workOrderController.updateState();
+                    }
+                  },
+                ),
               ),
-            ),
+            ],
             Expanded(
               child: workOrderController.loading
                   ? ListView.builder(
@@ -128,7 +149,7 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
                               key: refreshIndicatorKey,
                               color: Colors.blue,
                               onRefresh: () async {
-                                await workOrderController.getWorkOrders(context);
+                                await workOrderController.connectivity(context);
                               },
                               child: ListView.builder(
                                 itemCount: workOrderConsumer.filteredWorkOrderModelList.length,
@@ -247,7 +268,7 @@ class _WorkOrderScreenState extends State<WorkOrderScreen> {
       final workOrderController = Provider.of<WorkOrderController>(context, listen: false);
       workOrderController.dio = AppDio(context);
       workOrderController.logger.init();
-      workOrderController.getWorkOrders(context);
+     workOrderController.connectivity(context);
     });
   }
 }

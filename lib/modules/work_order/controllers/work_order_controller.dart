@@ -8,11 +8,13 @@ import 'package:etrack_mobile_connector_app/models/work_order_model.dart';
 import 'package:fialogs/fialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WorkOrderController extends ChangeNotifier {
   AppLogger logger = AppLogger();
   bool loading = false;
+  bool isSearchEnabled = false;
   late AppDio dio;
   List<WorkOrderModel> workOrderModelList = [];
   List<WorkOrderModel> filteredWorkOrderModelList = [];
@@ -23,12 +25,21 @@ class WorkOrderController extends ChangeNotifier {
   }
 
   connectivity(context) {
+    loading = true;
+    updateState();
     internet(
       connected: () {
-        //
+        getWorkOrders(context);
       },
-      notConnected: () {
-        // notConnectedDialog(context);
+      notConnected: () async {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final String? workOrdersString = prefs.getString('work_order_key');
+
+        final List<WorkOrderModel> workOrdersOffline = WorkOrderModel.decode(workOrdersString!);
+        filteredWorkOrderModelList = workOrdersOffline;
+        loading = false;
+
+        updateState();
       },
     );
   }
@@ -52,13 +63,17 @@ class WorkOrderController extends ChangeNotifier {
       var responseData = response.data;
 
       if (responseStatusCode == StatusCode.OK) {
-        var childes = responseData['data']['work_orders'];
+        var workOrders = responseData['data']['work_orders'];
+
         List<WorkOrderModel> tempList = [];
-        childes.forEach((item) {
+        workOrders.forEach((item) {
           tempList.add(WorkOrderModel.fromJson(item));
         });
         workOrderModelList = tempList;
         filteredWorkOrderModelList = tempList;
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final String encodedData = WorkOrderModel.encode(filteredWorkOrderModelList);
+        await prefs.setString('work_order_key', encodedData);
         updateState();
       } else {
         if (responseData != null) {

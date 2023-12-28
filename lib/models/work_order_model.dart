@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class WorkOrderModel {
   int? recordId;
   String? projectId;
@@ -31,40 +33,46 @@ class WorkOrderModel {
     this.coordinates,
   });
 
-  WorkOrderModel.fromJson(Map<String, dynamic> json) {
-    recordId = json['record_id'];
-    projectId = json['project_id'];
-    workOrder = json['work_order'];
-    toDoFilter = json['to_do_filter'];
-    area = json['area'];
-    assigned = json['assigned'];
-    responsibleAgent = json['responsible_agent'];
-    location = json['location'];
-    activity = json['activity'];
-    scheduledDate = json['scheduled_date'];
-    state = json['state'];
-    pickedTime = json['picked_time'];
-    arrivedTime = json['arrived_time'];
-    coordinates = json['coordinates'];
+  factory WorkOrderModel.fromJson(Map<String, dynamic> jsonData) {
+    return WorkOrderModel(
+      recordId: jsonData['record_id'],
+      projectId: jsonData['project_id'],
+      workOrder: jsonData['work_order'],
+      toDoFilter: jsonData['to_do_filter'],
+      area: jsonData['area'],
+      assigned: jsonData['assigned'],
+      responsibleAgent: jsonData['responsible_agent'],
+      location: jsonData['location'],
+      activity: jsonData['activity'],
+      scheduledDate: jsonData['scheduled_date'],
+      state: jsonData['state'],
+      pickedTime: jsonData['picked_time'],
+      arrivedTime: jsonData['arrived_time'],
+      coordinates: jsonData['coordinates'],
+    );
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['record_id'] = recordId;
-    data['project_id'] = projectId;
-    data['work_order'] = workOrder;
-    data['to_do_filter'] = toDoFilter;
-    data['area'] = area;
-    data['assigned'] = assigned;
-    data['responsible_agent'] = responsibleAgent;
-    data['location'] = location;
-    data['activity'] = activity;
-    data['scheduled_date'] = scheduledDate;
-    data['state'] = state;
-    data['picked_time'] = pickedTime;
-    data['arrived_time'] = arrivedTime;
-    data['coordinates'] = coordinates;
+  static Map<String, dynamic> toMap(WorkOrderModel workOrderModel) => {
+        'record_id': workOrderModel.recordId,
+        'project_id': workOrderModel.projectId,
+        'work_order': workOrderModel.workOrder,
+        'to_do_filter': workOrderModel.toDoFilter,
+        'area': workOrderModel.area,
+        'assigned': workOrderModel.assigned,
+        'responsible_agent': workOrderModel.responsibleAgent,
+        'location': workOrderModel.location,
+        'activity': workOrderModel.activity,
+        'scheduled_date': workOrderModel.scheduledDate,
+        'state': workOrderModel.state,
+        'picked_time': workOrderModel.pickedTime,
+        'arrived_time': workOrderModel.arrivedTime,
+        'coordinates': workOrderModel.coordinates,
+      };
 
-    return data;
-  }
+  static String encode(List<WorkOrderModel> workOrderModels) => json.encode(
+        workOrderModels.map<Map<String, dynamic>>((workOrderModel) => WorkOrderModel.toMap(workOrderModel)).toList(),
+      );
+
+  static List<WorkOrderModel> decode(String workOrderModels) =>
+      (json.decode(workOrderModels) as List<dynamic>).map<WorkOrderModel>((item) => WorkOrderModel.fromJson(item)).toList();
 }
